@@ -33,6 +33,7 @@ class Forward(OceanModelStep):
         openmp_threads=1,
         horiz_adv_order=None,
         nu=None,
+        use_mom_del4=False,
     ):
         """
         Create a new test case
@@ -90,6 +91,7 @@ class Forward(OceanModelStep):
         self.config_section = config_section
         self.horiz_adv_order = horiz_adv_order
         self.nu = nu
+        self.use_mom_del4 = use_mom_del4
 
         # make sure output is double precision
         self.add_yaml_file('polaris.ocean.config', 'output.yaml')
@@ -162,6 +164,7 @@ class Forward(OceanModelStep):
             run_duration=run_duration_str,
             run_duration_units=run_duration_units,
             output_interval=output_interval_str,
+            use_mom_del4=self.use_mom_del4,
             nu=self.nu,
             output_freq=f'{output_freq}',
             output_freq_units=output_units,
