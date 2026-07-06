@@ -38,7 +38,7 @@ def add_overflow_tasks(component):
         component=component,
         indir=taskdir,
         init=init_step,
-        horiz_adv_order=2,
+        horiz_adv_order=4,
         use_mom_del4=True,
     )
     smoke_test.set_shared_config(config, link=config_filename)

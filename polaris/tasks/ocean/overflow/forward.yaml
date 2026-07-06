@@ -6,7 +6,7 @@ ocean:
     config_dt: {{ dt }}
     config_time_integrator: {{ time_integrator }}
   hmix_del2:
-    config_use_mom_del2: {{ use_mom_del2 }}
+    config_use_mom_del2: true
     config_mom_del2: {{ nu }}
     config_use_tracer_del2: false
   hmix_del4:

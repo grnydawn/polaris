@@ -174,7 +174,6 @@ class Forward(OceanModelStep):
             run_duration=run_duration_str,
             run_duration_units=run_duration_units,
             output_interval=output_interval_str,
-            use_mom_del2=not self.use_mom_del4,
             use_mom_del4=self.use_mom_del4,
             nu=self.nu,
             nu4=self.nu4,
