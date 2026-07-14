@@ -155,11 +155,14 @@ for COMPILER in "${!COMPILER_MAP[@]}"; do
         configure_polaris "$COMPILER"
 
         PARMETIS_HOME="${PARMETIS_TPL//COMPILER/$COMPILER}"
-		if [ ! -d "$PARMETIS_HOME" ]; then
-			if [[ "$CRONJOB_MACHINE" == "frontier" ]]; then
-				PARMETIS_HOME=/ccs/proj/cli115/software/polaris/frontier/spack/dev_polaris_0_10_0_craygnu-mphipcc_mpich/var/spack/environments/dev_polaris_0_10_0_craygnu-mphipcc_mpich/.spack-env/view
-            fi
+	if [ ! -d "$PARMETIS_HOME" ]; then
+		if [[ "$CRONJOB_MACHINE" == "frontier" ]]; then
+			PARMETIS_HOME=/ccs/proj/cli115/software/polaris/frontier/spack/dev_polaris_0_10_0_craygnu-mphipcc_mpich/var/spack/environments/dev_polaris_0_10_0_craygnu-mphipcc_mpich/.spack-env/view
 		fi
+		if [[ "$CRONJOB_MACHINE" == "chrysalis" && "$COMPILER" == "oneapi-ifx" ]]; then
+			PARMETIS_HOME=/lcrc/soft/climate/polaris/chrysalis/spack/dev_polaris_0_10_0_intel_openmpi/var/spack/environments/dev_polaris_0_10_0_intel_openmpi/.spack-env/view
+		fi
+	fi
 
         build_omega_dev "$COMPILER" "$DEVELOP_BUILD" "$PARMETIS_HOME" "${COMPILER_MAP[$COMPILER]}"
 
