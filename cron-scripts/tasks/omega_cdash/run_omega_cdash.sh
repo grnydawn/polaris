@@ -34,7 +34,6 @@ else
 
 fi
 
-#echo "Compilers and ARCHs: ${COMPILER_MAP}"
 eval "$COMPILER_MAP_DEF"
 
 for COMPILER in "${!COMPILER_MAP[@]}"; do
@@ -48,6 +47,10 @@ for COMPILER in "${!COMPILER_MAP[@]}"; do
         if [[ "${CRONJOB_MACHINE:-unknown}" == "frontier" ]]; then
             PARMETIS_HOME="/ccs/proj/cli115/software/polaris/frontier/spack/dev_polaris_0_10_0_craygnu-mphipcc_mpich/var/spack/environments/dev_polaris_0_10_0_craygnu-mphipcc_mpich/.spack-env/view"
         fi
+
+        if [[ "${CRONJOB_MACHINE:-unknown}" == "chrysalis" ]]; then
+            PARMETIS_HOME="/lcrc/soft/climate/polaris/chrysalis/spack/dev_polaris_0_10_0_gnu_openmpi/var/spack/environments/dev_polaris_0_10_0_gnu_openmpi/.spack-env/view"
+        fi
     fi
 
     cmake \
@@ -57,7 +60,7 @@ for COMPILER in "${!COMPILER_MAP[@]}"; do
       -DOMEGA_BUILD_TEST=ON \
       -DOMEGA_PARMETIS_ROOT="${PARMETIS_HOME}" \
       -S "${OMEGA_ROOT}/components/omega" \
-      -B "${WORKDIR}";
+      -B "${WORKDIR}" || continue
 
     mkdir -p "${WORKDIR}/test"
 
@@ -78,6 +81,6 @@ for COMPILER in "${!COMPILER_MAP[@]}"; do
       -DCTEST_BUILD_COMMAND="${WORKDIR}/omega_build.sh" \
       -DCTEST_BUILD_CONFIGURATION="Release" \
       -DCTEST_DROP_SITE_CDASH=TRUE \
-      -DCTEST_SUBMIT_URL="https://my.cdash.org/submit.php?project=omega";
+      -DCTEST_SUBMIT_URL="https://my.cdash.org/submit.php?project=omega" || continue
 
 done

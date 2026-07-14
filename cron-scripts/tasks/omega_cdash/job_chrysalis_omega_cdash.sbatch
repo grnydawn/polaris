@@ -5,4 +5,4 @@
 
 source /etc/bashrc
 
-exec bash $(dirname "$0")/run_omega_cdash.sh
+exec bash ${RUNSCRIPT_DIR}/run_omega_cdash.sh
