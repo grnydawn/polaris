@@ -94,13 +94,9 @@ def pseudothickness_from_ds(
         iter_count = get_iter_count_for_eos(config)
 
     if 'SurfacePressure' not in ds.keys():
-        surface_pressure = config.getfloat('vertical_grid', 'surface_pressure')
-        print(
-            'SurfacePressure not found in dataset. Setting SurfacePressure '
-            f'to {surface_pressure} from config file'
-        )
+        print('SurfacePressure not found in dataset. Defaulting to zeroes.')
         ds['SurfacePressure'] = xr.DataArray(
-            surface_pressure * np.ones((1, ds.sizes['nCells']), dtype=float),
+            np.zeros((1, ds.sizes['nCells']), dtype=float),
             dims=('Time', 'nCells'),
         )
     src_var = ds[src_var_name]

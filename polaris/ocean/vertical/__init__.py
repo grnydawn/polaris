@@ -76,6 +76,21 @@ def init_vertical_coord(config, ds):
     for var in ['bottomDepth', 'ssh']:
         if var not in ds:
             raise ValueError(f'{var} must be added to ds before this call.')
+    if 'SurfacePressure' not in ds:
+        if 'surfacePressure' in ds:
+            ds['SurfacePressure'] = ds['surfacePressure']
+        else:
+            surface_pressure = config.getfloat(
+                'vertical_grid', 'surface_pressure'
+            )
+            print(
+                'SurfacePressure not found in dataset; setting '
+                f'SurfacePressure to {surface_pressure} from config file.'
+            )
+            ds['SurfacePressure'] = xr.DataArray(
+                surface_pressure * np.ones((ds.sizes['nCells']), dtype=float),
+                dims=('nCells'),
+            )
 
     if 'Time' in ds.ssh.dims:
         # drop it for now, we'll add it back at the end
