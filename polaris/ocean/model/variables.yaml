@@ -60,6 +60,5 @@ Omega:
     # [MinLayerCell, MaxLayerCell, BottomGeomDepth,
     # VertCoordMovementWeights, RefPseudoThickness]
     - RefPseudoThickness
-    - SurfacePressure
   state_variables:
     - PseudoThickness
