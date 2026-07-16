@@ -62,3 +62,4 @@ Omega:
     - RefPseudoThickness
   state_variables:
     - PseudoThickness
+    - SurfacePressure

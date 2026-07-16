@@ -429,19 +429,8 @@ class Ocean(Component):
                 # Because 'SurfacePressure' is required for Omega only,
                 # we must use Omega naming
                 ds['SurfacePressure'] = ds.surfacePressure
-            else:
-                # SurfacePressure defaults to 0 if not present for Omega
-                # These lines are not strictly necessary but make this explicit
-                # for the user
-                print(
-                    'surfacePressure not found in initial_state dataset; '
-                    'defaulting to zeros'
-                )
-                ds['SurfacePressure'] = xr.DataArray(
-                    data=np.zeros((1, ds.sizes['nCells']), dtype=float),
-                    dims=['Time', 'nCells'],
-                    attrs={'units': 'Pa', 'long_name': 'Surface Pressure'},
-                )
+            # do nothing if SurfacePressure is not present because it will be
+            # caught by write_model_dataset if the model is Omega
 
         self.write_model_dataset(ds, filename, config, contains_state=True)
 
