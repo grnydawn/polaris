@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import xarray as xr
+from numpy.testing import assert_allclose
 
 from polaris.model_step import ModelStep
 from polaris.ocean.model import OceanIOStep, OceanModelStep
@@ -29,6 +30,33 @@ def _make_config(
     )
     config.set('ocean_staged_files', 'init_filename', init_filename)
     return config
+
+
+def _make_surface_pressure_config(model, surface_pressure=101325.0):
+    """Return a config with the options write_initial_state_dataset reads."""
+    config = ConfigParser()
+    config.add_section('ocean')
+    config.set('ocean', 'model', model)
+    config.add_section('vertical_grid')
+    config.set('vertical_grid', 'surface_pressure', str(surface_pressure))
+    return config
+
+
+def _make_state_ds(surface_pressure=None):
+    """Return a minimal initial-state dataset, optionally with a surface
+    pressure already set."""
+    data_vars: dict = dict(
+        normalVelocity=(('nEdges', 'nVertLevels'), [[0.0], [0.0]]),
+        # layerThickness is a state variable for MPAS-Ocean and
+        # PseudoThickness for Omega
+        layerThickness=(('nCells', 'nVertLevels'), [[1.0], [1.0]]),
+        PseudoThickness=(('nCells', 'nVertLevels'), [[1.0], [1.0]]),
+        temperature=(('nCells', 'nVertLevels'), [[3.0], [4.0]]),
+        salinity=(('nCells', 'nVertLevels'), [[35.0], [35.0]]),
+    )
+    if surface_pressure is not None:
+        data_vars['SurfacePressure'] = ('nCells', surface_pressure)
+    return xr.Dataset(data_vars=data_vars)
 
 
 def test_write_initial_state_dataset_omega_drops_horiz_mesh_vars(tmp_path):
@@ -126,6 +154,71 @@ def test_write_initial_state_dataset_mpas_ocean_keeps_vert_coord_vars(
     assert 'maxLevelCell' in ds_out
     assert 'bottomDepth' in ds_out
     assert 'vertCoordMovementWeights' in ds_out
+
+
+def test_write_initial_state_dataset_omega_adds_surface_pressure(tmp_path):
+    """Omega requires a surface pressure, so it is added from the config
+    option when a task has not provided one."""
+    component = Ocean()
+    component.model = 'omega'
+    component._read_var_map()
+
+    filename = tmp_path / 'initial_state.nc'
+    component.write_initial_state_dataset(
+        _make_state_ds(),
+        str(filename),
+        _make_surface_pressure_config('omega'),
+    )
+
+    ds_out = xr.open_dataset(filename)
+    # SurfacePressure is an Omega-only field; the lowercase MPAS-Ocean name
+    # must never appear
+    assert 'surfacePressure' not in ds_out
+    assert_allclose(ds_out.SurfacePressure.values, [101325.0, 101325.0])
+    assert ds_out.SurfacePressure.dims == ('NCells',)
+    assert ds_out.SurfacePressure.attrs['units'] == 'Pa'
+
+
+def test_write_initial_state_dataset_omega_keeps_task_surface_pressure(
+    tmp_path,
+):
+    """A surface pressure set by a task is preserved, not overwritten by the
+    config default."""
+    component = Ocean()
+    component.model = 'omega'
+    component._read_var_map()
+
+    filename = tmp_path / 'initial_state.nc'
+    component.write_initial_state_dataset(
+        _make_state_ds(surface_pressure=[1234.0, 5678.0]),
+        str(filename),
+        _make_surface_pressure_config('omega'),
+    )
+
+    ds_out = xr.open_dataset(filename)
+    assert 'surfacePressure' not in ds_out
+    assert_allclose(ds_out.SurfacePressure.values, [1234.0, 5678.0])
+
+
+def test_write_initial_state_dataset_mpas_ocean_omits_surface_pressure(
+    tmp_path,
+):
+    """Surface pressure is required by Omega only, so it must not appear in
+    MPAS-Ocean initial conditions under either name."""
+    component = Ocean()
+    component.model = 'mpas-ocean'
+    component._read_var_map()
+
+    filename = tmp_path / 'initial_state.nc'
+    component.write_initial_state_dataset(
+        _make_state_ds(),
+        str(filename),
+        _make_surface_pressure_config('mpas-ocean'),
+    )
+
+    ds_out = xr.open_dataset(filename)
+    assert 'surfacePressure' not in ds_out
+    assert 'SurfacePressure' not in ds_out
 
 
 def test_write_vert_coord_dataset_noop_for_mpas_ocean(tmp_path):
