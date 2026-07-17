@@ -10,6 +10,7 @@ from ruamel.yaml import YAML
 
 from polaris import Component
 from polaris.constants import get_constant
+from polaris.ocean.surface_pressure import surface_pressure_from_config
 from polaris.ocean.vertical.diagnostics import (
     geom_thickness_from_ds,
     pseudothickness_from_ds,
@@ -424,13 +425,15 @@ class Ocean(Component):
         ds = self.remove_horiz_mesh_vars(ds)
         if self.model == 'omega':
             ds = self.remove_vert_coord_vars(ds)
-        if 'SurfacePressure' not in ds.keys():
-            if 'surfacePressure' in ds.keys():
-                # Because 'SurfacePressure' is required for Omega only,
-                # we must use Omega naming
-                ds['SurfacePressure'] = ds.surfacePressure
-            # do nothing if SurfacePressure is not present because it will be
-            # caught by write_model_dataset if the model is Omega
+            # Omega requires a surface pressure in its initial state but
+            # MPAS-Ocean does not, so only add it for Omega.  This is the one
+            # place the vertical_grid:surface_pressure config option is read
+            # (it always has a value from ocean.cfg); tasks that prescribe
+            # their own surface pressure are left untouched.
+            if 'SurfacePressure' not in ds.keys():
+                ds['SurfacePressure'] = surface_pressure_from_config(
+                    config, ds.sizes['nCells']
+                )
 
         self.write_model_dataset(ds, filename, config, contains_state=True)
 

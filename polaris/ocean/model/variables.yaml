@@ -62,4 +62,6 @@ Omega:
     - RefPseudoThickness
   state_variables:
     - PseudoThickness
+    # SurfacePressure is an Omega-only field (relative/gauge pressure) with no
+    # MPAS-Ocean equivalent, so it is not in the mpaso_to_omega.yaml var map
     - SurfacePressure
