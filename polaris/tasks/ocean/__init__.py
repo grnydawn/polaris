@@ -342,10 +342,16 @@ class Ocean(Component):
 
         ds_vc = ds.copy()
 
-        # Convert restingThickness (geometric) to RefPseudoThickness (pseudo)
+        # Convert restingThickness (geometric) to RefPseudoThickness (pseudo).
+        # Resting thicknesses are defined at zero surface pressure, so the
+        # conversion must not use whatever surface pressure the dataset
+        # happens to carry.
         if 'restingThickness' in ds_vc and 'RefPseudoThickness' not in ds_vc:
             pseudothickness, _ = pseudothickness_from_ds(
-                ds_vc, config=config, src_var_name='restingThickness'
+                ds_vc,
+                config=config,
+                src_var_name='restingThickness',
+                surf_pressure=0.0,
             )
             if pseudothickness is not None:
                 # VertCoordInit stream is time-independent; drop Time dim
