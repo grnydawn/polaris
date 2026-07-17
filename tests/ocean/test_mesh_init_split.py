@@ -75,6 +75,7 @@ def test_write_initial_state_dataset_omega_drops_vert_coord_vars(tmp_path):
             PseudoThickness=(('nCells', 'nVertLevels'), [[1.0], [1.0]]),
             temperature=(('nCells', 'nVertLevels'), [[3.0], [4.0]]),
             salinity=(('nCells', 'nVertLevels'), [[35.0], [35.0]]),
+            SurfacePressure=('nCells', [0.0, 0.0]),
             minLevelCell=('nCells', [0, 0]),
             maxLevelCell=('nCells', [0, 0]),
             bottomDepth=('nCells', [100.0, 200.0]),
@@ -87,6 +88,7 @@ def test_write_initial_state_dataset_omega_drops_vert_coord_vars(tmp_path):
 
     ds_out = xr.open_dataset(filename)
     assert 'Temperature' in ds_out
+    assert 'SurfacePressure' in ds_out
     assert 'MinLayerCell' not in ds_out
     assert 'MaxLayerCell' not in ds_out
     assert 'BottomGeomDepth' not in ds_out
