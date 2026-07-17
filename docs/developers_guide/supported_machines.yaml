@@ -49,14 +49,6 @@ machines:
         mpi: mpich
         mpas_target: null
       - model: Omega
-        compiler: crayamd
-        mpi: mpich
-        mpas_target: null
-      - model: Omega
-        compiler: crayamd-mphipcc
-        mpi: mpich
-        mpas_target: null
-      - model: Omega
         compiler: craycray
         mpi: mpich
         mpas_target: null
