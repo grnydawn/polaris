@@ -17,6 +17,7 @@ ocean/planar/overflow/smoke_test_horiz_adv_order_4
 ocean/spherical/icos/correlated_tracers_2d
 ocean/spherical/icos/cosine_bell/decomp
 ocean/spherical/icos/cosine_bell/restart
+ocean/spherical/icos/geostrophic/convergence_both
 ocean/spherical/icos/divergent_2d
 ocean/spherical/icos/nondivergent_2d
 ocean/spherical/icos/rotation_2d
