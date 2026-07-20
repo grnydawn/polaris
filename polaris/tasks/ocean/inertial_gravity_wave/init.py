@@ -7,6 +7,7 @@ from mpas_tools.planar_hex import make_planar_hex_mesh
 from polaris.mesh.planar import compute_planar_hex_nx_ny
 from polaris.ocean.coriolis import add_coriolis_to_dataset
 from polaris.ocean.model import OceanIOStep
+from polaris.ocean.surface_pressure import surface_pressure_from_config
 from polaris.ocean.vertical import init_vertical_coord
 from polaris.resolution import resolution_to_string
 from polaris.tasks.ocean.inertial_gravity_wave.exact_solution import (
@@ -111,5 +112,14 @@ class Init(OceanIOStep):
         normal_velocity = normal_velocity.transpose('nEdges', 'nVertLevels')
         normal_velocity = normal_velocity.expand_dims(dim='Time', axis=0)
         ds['normalVelocity'] = normal_velocity
+
+        if config.get('ocean', 'model') == 'omega':
+            # this step writes its initial state with write_model_dataset()
+            # rather than write_initial_state_dataset(), since it has no
+            # temperature or salinity, so it must add the surface pressure
+            # that Omega requires itself
+            ds['SurfacePressure'] = surface_pressure_from_config(
+                config, ds.sizes['nCells']
+            )
 
         self.write_model_dataset(ds, 'init.nc', config)

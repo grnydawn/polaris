@@ -48,7 +48,11 @@ def geom_thickness_from_ds(ds, config):
 
 
 def pseudothickness_from_ds(
-    ds, config, src_var_name='layerThickness', iter_count=None
+    ds,
+    config,
+    src_var_name='layerThickness',
+    iter_count=None,
+    surf_pressure=None,
 ):
     """
     Compute pseudothickness from temperature and salinity in dataset.
@@ -56,12 +60,12 @@ def pseudothickness_from_ds(
     Parameters
     ----------
     ds : xarray.Dataset
-        An ocean dataset containing 'temperature', 'salinity',
-        src_var_name, and 'SurfacePressure'
+        An ocean dataset containing 'temperature', 'salinity' and
+        src_var_name, along with 'SurfacePressure' if ``surf_pressure`` is
+        not given
 
     config : polaris.config.PolarisConfigParser
-        Configuration options for the test case, including
-        'vertical_grid:surface_pressure'
+        Configuration options for the test case
 
     src_var_name : str, optional
         The name of the variable in ds to use as the source for the
@@ -71,6 +75,11 @@ def pseudothickness_from_ds(
         The number of iterations to use when computing pressure and
         specific volume, by default ``pseudothickness_iter_count`` for teos-10
         and 1 for linear or constant EOS.
+
+    surf_pressure : float or xarray.DataArray, optional
+        The surface pressure to integrate down from.  Defaults to
+        ``ds.SurfacePressure``.  Pass 0. for quantities that are defined at
+        zero surface pressure, such as ``restingThickness``.
 
     Returns
     -------
@@ -93,16 +102,14 @@ def pseudothickness_from_ds(
     if iter_count is None:
         iter_count = get_iter_count_for_eos(config)
 
-    if 'SurfacePressure' not in ds.keys():
-        surface_pressure = config.getfloat('vertical_grid', 'surface_pressure')
-        print(
-            'SurfacePressure not found in dataset. Setting SurfacePressure '
-            f'to {surface_pressure} from config file'
-        )
-        ds['SurfacePressure'] = xr.DataArray(
-            surface_pressure * np.ones((1, ds.sizes['nCells']), dtype=float),
-            dims=('Time', 'nCells'),
-        )
+    if surf_pressure is None:
+        if 'SurfacePressure' not in ds.keys():
+            raise ValueError(
+                'pseudothickness_from_ds() requires SurfacePressure in the '
+                'dataset or an explicit surf_pressure argument.'
+            )
+        surf_pressure = ds.SurfacePressure
+
     src_var = ds[src_var_name]
     src_has_time = 'Time' in src_var.dims
     if not src_has_time:
@@ -112,7 +119,7 @@ def pseudothickness_from_ds(
         src_var,
         ds.temperature,
         ds.salinity,
-        ds.SurfacePressure,
+        surf_pressure,
         iter_count=iter_count,
     )
 

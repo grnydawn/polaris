@@ -10,6 +10,7 @@ from ruamel.yaml import YAML
 
 from polaris import Component
 from polaris.constants import get_constant
+from polaris.ocean.surface_pressure import surface_pressure_from_config
 from polaris.ocean.vertical.diagnostics import (
     geom_thickness_from_ds,
     pseudothickness_from_ds,
@@ -341,26 +342,16 @@ class Ocean(Component):
 
         ds_vc = ds.copy()
 
-        # make sure SurfacePressure is present for Omega
-        if 'SurfacePressure' not in ds.keys():
-            if 'surfacePressure' in ds.keys():
-                # Because 'SurfacePressure' is required for Omega only,
-                # we must use Omega naming
-                ds['SurfacePressure'] = ds.surfacePressure
-            else:
-                print(
-                    'surfacePressure not found in initial_state dataset; '
-                    'defaulting to zeros'
-                )
-                ds['SurfacePressure'] = xr.DataArray(
-                    data=np.zeros((1, ds.sizes['nCells']), dtype=float),
-                    dims=['Time', 'nCells'],
-                    attrs={'units': 'Pa', 'long_name': 'Surface Pressure'},
-                )
-        # Convert restingThickness (geometric) to RefPseudoThickness (pseudo)
+        # Convert restingThickness (geometric) to RefPseudoThickness (pseudo).
+        # Resting thicknesses are defined at zero surface pressure, so the
+        # conversion must not use whatever surface pressure the dataset
+        # happens to carry.
         if 'restingThickness' in ds_vc and 'RefPseudoThickness' not in ds_vc:
             pseudothickness, _ = pseudothickness_from_ds(
-                ds_vc, config=config, src_var_name='restingThickness'
+                ds_vc,
+                config=config,
+                src_var_name='restingThickness',
+                surf_pressure=0.0,
             )
             if pseudothickness is not None:
                 # VertCoordInit stream is time-independent; drop Time dim
@@ -440,6 +431,15 @@ class Ocean(Component):
         ds = self.remove_horiz_mesh_vars(ds)
         if self.model == 'omega':
             ds = self.remove_vert_coord_vars(ds)
+            # Omega requires a surface pressure in its initial state but
+            # MPAS-Ocean does not, so only add it for Omega.  This is the one
+            # place the vertical_grid:surface_pressure config option is read
+            # (it always has a value from ocean.cfg); tasks that prescribe
+            # their own surface pressure are left untouched.
+            if 'SurfacePressure' not in ds.keys():
+                ds['SurfacePressure'] = surface_pressure_from_config(
+                    config, ds.sizes['nCells']
+                )
 
         self.write_model_dataset(ds, filename, config, contains_state=True)
 
