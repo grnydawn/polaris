@@ -41,6 +41,55 @@ same discrete answer as the Python initialization, but also to measure how the
 two-column discretization converges toward a more accurate non-local
 approximation of the continuous hydrostatic pressure-gradient force.
 
+Each variant isolates a different way a horizontal pressure gradient can arise:
+
+- `salinity_gradient` and `temperature_gradient` keep the layers level and
+  impose a horizontal density gradient, so the HPGA comes entirely from the
+  baroclinic term.
+- `ztilde_gradient` keeps the water properties horizontally uniform and tilts
+  the z-tilde interfaces, so the HPGA comes entirely from the geometric
+  (layer-slope) term.  This is the classic pressure-gradient-error
+  configuration for a terrain-following coordinate.
+- `surface_pressure_gradient` imposes a horizontally varying surface pressure,
+  as under a floating ice shelf, which tilts the layers through the surface
+  boundary condition rather than through the prescribed z-tilde profile.
+
+### why the `surface_pressure_gradient` variant
+
+Under an ice shelf the ocean surface is not a free surface at zero gauge
+pressure: it carries the weight of the ice above it, and the sea surface is
+depressed by roughly $-p_s / (\rho_0 g)$.  Wherever the ice thickness varies,
+both the surface pressure $p_s$ and the sea-surface height $\eta$ therefore
+vary horizontally, and in the p-star coordinate that depression also compresses
+the column so that *every* layer below is tilted, even though the prescribed
+z-tilde profile is level.
+
+This is precisely the regime in which pressure-gradient errors have
+historically been worst in terrain-following ocean models.  Two things happen at
+once: the layers acquire a steep slope, and the surface boundary term becomes
+large.  In the reference expression below, the two pieces of that boundary term,
+$-g\,\eta'$ and $+g\,\rho_0\,\alpha(\tilde z_s)\,\tilde z_s'$, nearly cancel
+because $\rho_0 \alpha \approx 1$, so the surviving HPGA is a small residual
+between two large numbers.  Any inconsistency in how Omega, the Python
+initialization, or the reference solution treat the surface would show up
+immediately as a large error that fails to converge.
+
+The variant is therefore meant to demonstrate that
+
+- Omega robustly supports a nonzero surface pressure and the corresponding
+  depressed, sloping sea surface;
+- Omega, the Python two-column diagnostic, and the analytic reference all
+  treat the surface boundary term consistently; and
+- Omega still converges to the reference at the same rate, and to comparable
+  accuracy, as in the variants with a flat, unloaded surface.
+
+Together these give confidence that the HPGA will remain consistent beneath real
+ice shelves, where layers can be steeply sloped.  The default configuration is
+sized for that application: `surface_pressure_mid = 8.99e5` Pa is the weight of
+about 100 m of Antarctic ice, and `surface_pressure_grad = 8.99e3` Pa/km
+corresponds to an ice-thickness slope of about 1 m/km (and hence a sea-surface
+slope of about &minus;0.9 m/km).
+
 ## supported models
 
 These tasks currently support Omega only.
@@ -242,8 +291,9 @@ The four task variants each specialize one horizontal gradient field:
 - `salinity_gradient`: nonzero `salinity_grad`
 - `temperature_gradient`: nonzero `temperature_grad`
 - `ztilde_gradient`: nonzero `z_tilde_bot_grad`
-- `surface_pressure_gradient`: nonzero `surface_pressure_grad` (with the
-  sea-surface height following the default surface-pressure depression)
+- `surface_pressure_gradient`: nonzero `surface_pressure_mid` and
+  `surface_pressure_grad` (with the sea-surface height following the default
+  surface-pressure depression), representing an overlying ice shelf
 
 ## time step and run duration
 
