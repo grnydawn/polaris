@@ -33,6 +33,8 @@ class Forward(OceanModelStep):
         openmp_threads=1,
         horiz_adv_order=None,
         nu=None,
+        nu4=None,
+        use_mom_del4=False,
     ):
         """
         Create a new test case
@@ -72,7 +74,12 @@ class Forward(OceanModelStep):
             from the default for the test group)
 
         nu : float, optional
-            the viscosity (if different from the default for the test group)
+            the Laplacian (del2) viscosity (if different from the default for
+            the test group)
+
+        nu4 : float, optional
+            the biharmonic (del4) viscosity (if different from the default for
+            the test group)
         """
         if min_tasks is None:
             min_tasks = ntasks
@@ -90,6 +97,8 @@ class Forward(OceanModelStep):
         self.config_section = config_section
         self.horiz_adv_order = horiz_adv_order
         self.nu = nu
+        self.nu4 = nu4
+        self.use_mom_del4 = use_mom_del4
 
         # make sure output is double precision
         self.add_yaml_file('polaris.ocean.config', 'output.yaml')
@@ -120,6 +129,9 @@ class Forward(OceanModelStep):
         )
         if self.nu is None:
             self.nu = config.getfloat('overflow', 'default_viscosity')
+
+        if self.nu4 is None:
+            self.nu4 = config.getfloat('overflow', 'default_del4_viscosity')
 
         if self.horiz_adv_order is None:
             self.horiz_adv_order = config.getint(
@@ -158,7 +170,9 @@ class Forward(OceanModelStep):
             run_duration=run_duration_str,
             run_duration_units=run_duration_units,
             output_interval=output_interval_str,
+            use_mom_del4=self.use_mom_del4,
             nu=self.nu,
+            nu4=self.nu4,
             output_freq=f'{output_freq}',
             output_freq_units=output_units,
             horiz_adv_order=self.horiz_adv_order,

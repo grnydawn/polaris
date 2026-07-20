@@ -12,7 +12,9 @@ class SmokeTest(Task):
     initial condition, then performs a short forward run on 4 cores.
     """
 
-    def __init__(self, component, indir, init, horiz_adv_order):
+    def __init__(
+        self, component, indir, init, horiz_adv_order, use_mom_del4=False
+    ):
         """
         Create the test case
 
@@ -31,6 +33,8 @@ class SmokeTest(Task):
             The horizontal advection order for the test case
         """
         task_name = f'smoke_test_horiz_adv_order_{horiz_adv_order}'
+        if use_mom_del4:
+            task_name += '_del4'
         super().__init__(component=component, name=task_name, indir=indir)
 
         self.add_step(init, symlink='init')
@@ -42,6 +46,7 @@ class SmokeTest(Task):
             name='forward',
             indir=self.subdir,
             horiz_adv_order=horiz_adv_order,
+            use_mom_del4=use_mom_del4,
         )
         self.add_step(forward_step)
 

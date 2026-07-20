@@ -10,7 +10,8 @@ ocean:
     config_mom_del2: {{ nu }}
     config_use_tracer_del2: false
   hmix_del4:
-    config_use_mom_del4: false
+    config_use_mom_del4: {{ use_mom_del4 }}
+    config_mom_del4: {{ nu4 }}
     config_use_tracer_del4: false
   cvmix:
     config_use_cvmix_convection: false
