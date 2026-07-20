@@ -61,6 +61,7 @@ class Forward(SphericalConvergenceForward):
             yaml_filename='forward.yaml',
             output_filename='output.nc',
             validate_vars=validate_vars,
+            update_eos=True,
             graph_target=f'{mesh.path}/graph.info',
             refinement_factor=refinement_factor,
             refinement=refinement,
